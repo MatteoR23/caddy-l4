@@ -10,23 +10,34 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Get latest Caddy version
+      # 🔎 Get latest Caddy release
+      - name: Get latest Caddy release
         id: caddy
-        run: |
-          VERSION=$(curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | jq -r .tag_name)
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        uses: pozetroninc/github-action-get-latest-release@v0.7.0
+        with:
+          repository: caddyserver/caddy
+          excludes: prerelease, draft
 
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - name: Print detected version
+        run: echo "Latest Caddy version is ${{ steps.caddy.outputs.release }}"
 
-      - uses: docker/login-action@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -39,7 +50,7 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/caddy-l4
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.caddy.outputs.version }}-l4
+            type=raw,value=${{ steps.caddy.outputs.release }}-l4
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -48,5 +59,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            CADDY_VERSION=${{ steps.caddy.outputs.version }}
+            CADDY_VERSION=${{ steps.caddy.outputs.release }}
           tags: ${{ steps.meta.outputs.tags }}
