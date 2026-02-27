@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+
 jobs:
   build:
     strategy:
@@ -16,6 +19,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+
+    outputs:
+      version: ${{ steps.normalize.outputs.version }}
+      image: ${{ steps.meta.outputs.image }}
 
     steps:
       - name: Checkout
@@ -30,15 +37,24 @@ jobs:
 
       - name: Normalize version
         id: normalize
+        shell: bash
         run: |
           VERSION="${{ steps.caddy.outputs.release }}"
-          VERSION_NO_V=${VERSION#v}
-          echo "version=${VERSION_NO_V}" >> $GITHUB_OUTPUT
+          VERSION_NO_V="${VERSION#v}"
+          echo "version=${VERSION_NO_V}" >> "$GITHUB_OUTPUT"
+
+      - name: Compute image name (lowercase)
+        id: meta
+        shell: bash
+        run: |
+          # github.repository is like Owner/Repo (can contain uppercase)
+          REPO_LC="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "image=${{ env.REGISTRY }}/${REPO_LC}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -54,9 +70,9 @@ jobs:
           build-args: |
             CADDY_VERSION=${{ steps.normalize.outputs.version }}
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.normalize.outputs.version }}-${{ matrix.arch }}
+            ${{ steps.meta.outputs.image }}:${{ steps.normalize.outputs.version }}-${{ matrix.arch }}
           provenance: false
-          
+
   manifest:
     needs: build
     runs-on: ubuntu-24.04
@@ -68,23 +84,24 @@ jobs:
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create multi-arch manifest
+        shell: bash
         run: |
-          VERSION=$(curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | jq -r .tag_name)
-          VERSION_NO_V=${VERSION#v}
+          IMAGE="${{ needs.build.outputs.image }}"
+          VERSION="${{ needs.build.outputs.version }}"
 
-          docker manifest create ghcr.io/${{ github.repository }}:${VERSION_NO_V} \
-            ghcr.io/${{ github.repository }}:${VERSION_NO_V}-amd64 \
-            ghcr.io/${{ github.repository }}:${VERSION_NO_V}-arm64
+          docker manifest create "${IMAGE}:${VERSION}" \
+            "${IMAGE}:${VERSION}-amd64" \
+            "${IMAGE}:${VERSION}-arm64"
 
-          docker manifest push ghcr.io/${{ github.repository }}:${VERSION_NO_V}
+          docker manifest push "${IMAGE}:${VERSION}"
 
-          docker manifest create ghcr.io/${{ github.repository }}:latest \
-            ghcr.io/${{ github.repository }}:${VERSION_NO_V}-amd64 \
-            ghcr.io/${{ github.repository }}:${VERSION_NO_V}-arm64
+          docker manifest create "${IMAGE}:latest" \
+            "${IMAGE}:${VERSION}-amd64" \
+            "${IMAGE}:${VERSION}-arm64"
 
-          docker manifest push ghcr.io/${{ github.repository }}:latest
+          docker manifest push "${IMAGE}:latest"
