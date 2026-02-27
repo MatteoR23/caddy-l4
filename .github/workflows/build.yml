@@ -29,6 +29,13 @@ jobs:
 
       - name: Print detected version
         run: echo "Latest Caddy version is ${{ steps.caddy.outputs.release }}"
+        
+      - name: Strip leading v
+        id: normalize
+        run: |
+          VERSION="${{ steps.caddy.outputs.release }}"
+          VERSION_NO_V=${VERSION#v}
+          echo "version=${VERSION_NO_V}" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -59,5 +66,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            CADDY_VERSION=${{ steps.caddy.outputs.release }}
+            CADDY_VERSION=${{ steps.normalize.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
