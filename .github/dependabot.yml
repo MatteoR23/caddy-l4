@@ -9,6 +9,10 @@ updates:
       prefix: "build(deps)"
     labels:
       - dependencies
+    groups:
+      caddy:
+        patterns:
+          - "caddy"
 
   - package-ecosystem: github-actions
     directory: /
@@ -18,3 +22,7 @@ updates:
       prefix: "ci(deps)"
     labels:
       - dependencies
+    groups:
+      actions:
+        patterns:
+          - "*"
