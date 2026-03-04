@@ -1,49 +1,43 @@
 # caddy-l4
 
+[![Build](https://github.com/MatteoR23/caddy-l4/actions/workflows/build.yml/badge.svg)](https://github.com/MatteoR23/caddy-l4/actions/workflows/build.yml)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot)](https://github.com/MatteoR23/caddy-l4/blob/main/.github/dependabot.yml)
+
 Docker image for **Caddy** built with the [`mholt/caddy-l4`](https://github.com/mholt/caddy-l4) plugin.
 
 ## What it includes
 
-- Multi-stage build with `xcaddy`.
-- Caddy + L4 module (`github.com/mholt/caddy-l4`).
-- Multi-architecture publishing (`amd64` and `arm64`) to GHCR via GitHub Actions.
+- Multi-stage build with `xcaddy`
+- Caddy + L4 module (`github.com/mholt/caddy-l4`)
+- Multi-architecture publishing (`amd64` and `arm64`) to GHCR via GitHub Actions
+- Automatic updates via Dependabot (daily for Caddy, weekly for Actions)
 
 ## Published image
 
-The workflow publishes to:
-
-`ghcr.io/<owner>/<repo>`
-
-Main tags:
-
-- `latest`
-- `<version>` (for example: `2.9.1`)
-- `<version>-amd64`
-- `<version>-arm64`
+```
+ghcr.io/matteo23/caddy-l4:latest
+ghcr.io/matteo23/caddy-l4:<version>        # e.g. 2.11.1
+ghcr.io/matteo23/caddy-l4:<version>-amd64
+ghcr.io/matteo23/caddy-l4:<version>-arm64
+```
 
 ## Quick start
 
 ```bash
-docker pull ghcr.io/<owner>/<repo>:latest
-docker run --rm -it ghcr.io/<owner>/<repo>:latest caddy version
+docker pull ghcr.io/matteo23/caddy-l4:latest
+docker run --rm ghcr.io/matteo23/caddy-l4:latest caddy version
 ```
 
 ## Local build
 
-Example to build a specific Caddy version locally:
-
 ```bash
-docker build --build-arg CADDY_VERSION=2.9.1 -t caddy-l4:local .
+docker build -t caddy-l4:local .
 ```
 
-## CI/CD
+## How updates work
 
-The `.github/workflows/build.yml` workflow:
-
-1. Fetches the latest stable release from `caddyserver/caddy`.
-2. Builds and pushes per-architecture images.
-3. Creates and pushes multi-arch manifests for `<version>` and `latest`.
+The Caddy version is pinned in the `Dockerfile`. Dependabot opens a PR when a new release is available — merging it triggers the build and pushes the updated image to GHCR.
 
 ## License
 
-This repository is licensed under MIT. See [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
