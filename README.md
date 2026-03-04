@@ -15,17 +15,17 @@ Docker image for **Caddy** built with the [`mholt/caddy-l4`](https://github.com/
 ## Published image
 
 ```
-ghcr.io/matteo23/caddy-l4:latest
-ghcr.io/matteo23/caddy-l4:<version>        # e.g. 2.11.1
-ghcr.io/matteo23/caddy-l4:<version>-amd64
-ghcr.io/matteo23/caddy-l4:<version>-arm64
+ghcr.io/matteor23/caddy-l4:latest
+ghcr.io/matteor23/caddy-l4:<version>        # e.g. 2.11.1
+ghcr.io/matteor23/caddy-l4:<version>-amd64
+ghcr.io/matteor23/caddy-l4:<version>-arm64
 ```
 
 ## Quick start
 
 ```bash
-docker pull ghcr.io/matteo23/caddy-l4:latest
-docker run --rm ghcr.io/matteo23/caddy-l4:latest caddy version
+docker pull ghcr.io/matteor23/caddy-l4:latest
+docker run --rm ghcr.io/matteor23/caddy-l4:latest caddy version
 ```
 
 ## Local build
