@@ -1,10 +1,8 @@
-ARG CADDY_VERSION
+FROM caddy:2.11.1-builder AS builder
 
-FROM caddy:builder AS builder
-
-RUN xcaddy build ${CADDY_VERSION} \
+RUN xcaddy build \
     --with github.com/mholt/caddy-l4
 
-FROM caddy:${CADDY_VERSION}
+FROM caddy:2.11.1
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
